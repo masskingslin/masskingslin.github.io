@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>King Cloud — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #c9a84c;
+  --gold2: #f0d080;
+  --bg: #060709;
+  --bg2: #0c0f12;
+  --bg3: #111520;
+  --border: rgba(201,168,76,0.18);
+  --border2: rgba(201,168,76,0.35);
+  --text: #d4cfc0;
+  --dim: #6a6555;
+  --green: #4caf7d;
+  --red: #e05555;
+  --blue: #4a9edd;
+  --mono: 'Share Tech Mono', monospace;
+  --head: 'Rajdhani', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; background:var(--bg); color:var(--text); font-family:var(--mono); overflow-x:hidden; }
+
+/* ── SCAN LINES OVERLAY ── */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+}
+/* ── CORNER MARKS ── */
+.corner-mark { position:fixed; width:18px; height:18px; border-color:var(--gold); border-style:solid; z-index:100; opacity:0.5; }
+.corner-mark.tl { top:12px; left:12px; border-width:2px 0 0 2px; }
+.corner-mark.tr { top:12px; right:12px; border-width:2px 2px 0 0; }
+.corner-mark.bl { bottom:12px; left:12px; border-width:0 0 2px 2px; }
+.corner-mark.br { bottom:12px; right:12px; border-width:0 2px 2px 0; }
+
+/* ── PAGE SECTIONS ── */
+.page { display:none; min-height:100vh; }
+.page.active { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+
+/* ── LOGO ── */
+.logo {
+  font-family:var(--head); font-size:11px; font-weight:500; letter-spacing:6px;
+  color:var(--dim); text-transform:uppercase; margin-bottom:6px;
+}
+.logo-main {
+  font-family:var(--head); font-size:36px; font-weight:700; letter-spacing:4px;
+  color:var(--gold); text-transform:uppercase; line-height:1;
+  text-shadow: 0 0 30px rgba(201,168,76,0.3);
+}
+.logo-sub {
+  font-family:var(--head); font-size:12px; letter-spacing:8px; color:var(--dim);
+  margin-top:4px; text-transform:uppercase;
+}
+
+/* ── CARD ── */
+.card {
+  background:var(--bg2); border:1px solid var(--border2);
+  padding:32px 36px; width:100%; max-width:420px;
+  position:relative; margin-top:28px;
+}
+.card::before, .card::after {
+  content:''; position:absolute; width:8px; height:8px;
+  border-color:var(--gold); border-style:solid; opacity:0.7;
+}
+.card::before { top:-1px; left:-1px; border-width:2px 0 0 2px; }
+.card::after  { bottom:-1px; right:-1px; border-width:0 2px 2px 0; }
+
+.card-title {
+  font-family:var(--head); font-size:13px; letter-spacing:5px;
+  color:var(--gold); text-transform:uppercase; margin-bottom:24px; text-align:center;
+}
+
+/* ── FORM ── */
+.field { margin-bottom:18px; }
+.field label { font-size:10px; letter-spacing:3px; color:var(--dim); display:block; margin-bottom:6px; text-transform:uppercase; }
+.field input {
+  width:100%; background:var(--bg3); border:1px solid var(--border);
+  color:var(--text); font-family:var(--mono); font-size:14px;
+  padding:10px 14px; outline:none; transition:border-color 0.2s;
+}
+.field input:focus { border-color:var(--gold); }
+.field input::placeholder { color:var(--dim); }
+
+.hash-preview {
+  font-size:9px; color:var(--dim); word-break:break-all;
+  margin-top:6px; min-height:14px; letter-spacing:1px;
+}
+
+.btn {
+  width:100%; background:transparent; border:1px solid var(--gold);
+  color:var(--gold); font-family:var(--head); font-size:14px; font-weight:700;
+  letter-spacing:4px; padding:12px; cursor:pointer; text-transform:uppercase;
+  transition:all 0.2s; margin-top:4px;
+}
+.btn:hover { background:var(--gold); color:var(--bg); }
+.btn:active { transform:scale(0.99); }
+
+.msg { font-size:11px; text-align:center; margin-top:14px; min-height:16px; letter-spacing:1px; }
+.msg.err { color:var(--red); }
+.msg.ok  { color:var(--green); }
+
+.hint { font-size:10px; color:var(--dim); text-align:center; margin-top:20px; letter-spacing:1px; line-height:1.7; }
+.hint span { color:var(--gold); cursor:pointer; }
+.hint span:hover { text-decoration:underline; }
+
+/* ── DASHBOARD ── */
+#dash { padding:0; align-items:stretch; justify-content:flex-start; flex-direction:column; }
+
+.topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--bg2); border-bottom:1px solid var(--border);
+  padding:0 20px; height:50px; flex-shrink:0;
+}
+.topbar-left { display:flex; align-items:center; gap:16px; }
+.topbar-brand { font-family:var(--head); font-size:18px; font-weight:700; letter-spacing:3px; color:var(--gold); }
+.topbar-tag { font-size:9px; letter-spacing:3px; color:var(--dim); }
+.topbar-right { display:flex; align-items:center; gap:14px; }
+.status-dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 2s infinite; }
+.status-dot.offline { background:var(--red); box-shadow:0 0 6px var(--red); animation:none; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.topbar-status { font-size:10px; letter-spacing:2px; color:var(--dim); }
+.logout-btn {
+  background:transparent; border:1px solid var(--border); color:var(--dim);
+  font-family:var(--mono); font-size:10px; letter-spacing:2px; padding:4px 12px;
+  cursor:pointer; transition:all 0.2s; text-transform:uppercase;
+}
+.logout-btn:hover { border-color:var(--red); color:var(--red); }
+
+.dash-body { flex:1; padding:20px; overflow-y:auto; }
+
+/* ── STAT CARDS ── */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+.stat-card {
+  background:var(--bg2); border:1px solid var(--border);
+  padding:16px 18px; position:relative; overflow:hidden;
+}
+.stat-card::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+  background:var(--gold); opacity:0.3; transition:opacity 0.3s;
+}
+.stat-card:hover::after { opacity:0.8; }
+.stat-label { font-size:9px; letter-spacing:3px; color:var(--dim); text-transform:uppercase; margin-bottom:8px; }
+.stat-val { font-family:var(--head); font-size:28px; font-weight:700; color:var(--gold2); line-height:1; }
+.stat-unit { font-size:10px; color:var(--dim); margin-left:3px; }
+.stat-sub { font-size:10px; color:var(--dim); margin-top:4px; }
+
+/* ── PANELS ── */
+.panels { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+@media(max-width:600px){ .panels { grid-template-columns:1fr; } }
+.panel { background:var(--bg2); border:1px solid var(--border); padding:16px; }
+.panel-title { font-size:9px; letter-spacing:3px; color:var(--gold); text-transform:uppercase; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px; }
+
+/* ── TERMINAL ── */
+.terminal {
+  background:var(--bg); border:1px solid var(--border); padding:14px;
+  font-size:12px; line-height:2; min-height:140px; overflow-y:auto; max-height:180px;
+}
+.terminal .line { display:block; }
+.terminal .prompt { color:var(--gold); }
+.terminal .ok { color:var(--green); }
+.terminal .err { color:var(--red); }
+.terminal .info { color:var(--blue); }
+.terminal .dim { color:var(--dim); }
+
+/* ── API CONFIG ── */
+.api-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+.api-input {
+  flex:1; background:var(--bg3); border:1px solid var(--border);
+  color:var(--text); font-family:var(--mono); font-size:11px;
+  padding:7px 10px; outline:none;
+}
+.api-input:focus { border-color:var(--gold); }
+.mini-btn {
+  background:transparent; border:1px solid var(--border2); color:var(--gold);
+  font-family:var(--mono); font-size:10px; padding:7px 12px;
+  cursor:pointer; white-space:nowrap; transition:all 0.2s; text-transform:uppercase; letter-spacing:1px;
+}
+.mini-btn:hover { background:var(--gold); color:var(--bg); }
+
+/* ── SERVICES ── */
+.service-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 0; border-bottom:1px solid var(--border); font-size:12px;
+}
+.service-row:last-child { border-bottom:none; }
+.svc-name { color:var(--text); letter-spacing:1px; }
+.svc-port { color:var(--dim); font-size:10px; }
+.svc-badge {
+  font-size:9px; letter-spacing:2px; padding:2px 8px; border-radius:0;
+  text-transform:uppercase; font-weight:bold;
+}
+.svc-badge.up   { background:rgba(76,175,125,0.12); color:var(--green); border:1px solid rgba(76,175,125,0.3); }
+.svc-badge.down { background:rgba(224,85,85,0.12);  color:var(--red);   border:1px solid rgba(224,85,85,0.3); }
+.svc-badge.ping { background:rgba(74,158,221,0.12); color:var(--blue);  border:1px solid rgba(74,158,221,0.3); }
+
+/* ── REFRESH BAR ── */
+.refresh-bar {
+  display:flex; align-items:center; gap:10px; font-size:10px; color:var(--dim);
+  margin-bottom:12px; letter-spacing:1px;
+}
+.refresh-bar span { color:var(--gold); cursor:pointer; }
+.refresh-bar span:hover { text-decoration:underline; }
+#last-update { color:var(--dim); }
+
+/* ── GLITCH ── */
+@keyframes glitch {
+  0%,100%{transform:translate(0)} 20%{transform:translate(-2px,1px)} 40%{transform:translate(2px,-1px)}
+  60%{transform:translate(-1px,2px)} 80%{transform:translate(1px,-2px)}
+}
+.glitch { animation:glitch 0.3s linear; }
+
+/* ── MOBILE ── */
+@media(max-width:480px){
+  .card { padding:24px 20px; }
+  .logo-main { font-size:28px; }
+  .topbar-brand { font-size:14px; }
+  .stat-val { font-size:22px; }
+}
+</style>
+</head>
+<body>
+
+<div class="corner-mark tl"></div>
+<div class="corner-mark tr"></div>
+<div class="corner-mark bl"></div>
+<div class="corner-mark br"></div>
+
+<!-- ══ PAGE: SETUP ══ -->
+<div class="page active" id="pg-setup">
+  <div class="logo">King Cloud</div>
+  <div class="logo-main">ADMIN</div>
+  <div class="logo-sub">First Time Setup</div>
+  <div class="card">
+    <div class="card-title">▸ Set Admin Password</div>
+    <div class="field">
+      <label>New Password</label>
+      <input type="password" id="setup-pw" placeholder="Enter your secret password" oninput="previewHash(this.value,'setup-hash')">
+      <div class="hash-preview" id="setup-hash"></div>
+    </div>
+    <div class="field">
+      <label>Confirm Password</label>
+      <input type="password" id="setup-pw2" placeholder="Repeat password">
+    </div>
+    <button class="btn" onclick="doSetup()">INITIALISE ADMIN ACCESS</button>
+    <div class="msg" id="setup-msg"></div>
+  </div>
+  <div class="hint">Password is hashed with SHA-256 and stored locally.<br>Never sent to any server.</div>
+</div>
+
+<!-- ══ PAGE: LOGIN ══ -->
+<div class="page" id="pg-login">
+  <div class="logo">King Cloud</div>
+  <div class="logo-main">ADMIN</div>
+  <div class="logo-sub">Restricted Access</div>
+  <div class="card">
+    <div class="card-title">▸ Authenticate</div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-pw" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn" onclick="doLogin()">ENTER KING CLOUD</button>
+    <div class="msg err" id="login-msg"></div>
+  </div>
+  <div class="hint"><span onclick="resetAdmin()">Reset password</span> · clears stored hash</div>
+</div>
+
+<!-- ══ PAGE: DASHBOARD ══ -->
+<div class="page" id="dash">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-brand">👑 KINGCLOUD</div>
+      <div class="topbar-tag">ADMIN CONSOLE</div>
+    </div>
+    <div class="topbar-right">
+      <div class="status-dot" id="status-dot"></div>
+      <div class="topbar-status" id="status-text">CONNECTING...</div>
+      <button class="logout-btn" onclick="doLogout()">LOGOUT</button>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- Refresh bar -->
+    <div class="refresh-bar">
+      <span onclick="fetchAll()">↻ Refresh</span>
+      <span> | </span>
+      Last update: <span id="last-update">—</span>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Ping</div>
+        <div class="stat-val" id="s-ping">—<span class="stat-unit">ms</span></div>
+        <div class="stat-sub" id="s-ping-sub">Not measured</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Latency</div>
+        <div class="stat-val" id="s-lat">—<span class="stat-unit">ms</span></div>
+        <div class="stat-sub" id="s-lat-sub">API response</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Network</div>
+        <div class="stat-val" id="s-net" style="font-size:20px">—</div>
+        <div class="stat-sub" id="s-net-sub">Band type</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Requests</div>
+        <div class="stat-val" id="s-req">0</div>
+        <div class="stat-sub">This session</div>
+      </div>
+    </div>
+
+    <!-- Panels -->
+    <div class="panels">
+
+      <!-- API Config -->
+      <div class="panel">
+        <div class="panel-title">◈ API Endpoint</div>
+        <div class="api-row">
+          <input class="api-input" id="api-url" placeholder="https://your-tunnel.trycloudflare.com">
+          <button class="mini-btn" onclick="saveApi()">SAVE</button>
+        </div>
+        <button class="mini-btn" style="width:100%;margin-bottom:8px" onclick="testApi()">▶ TEST CONNECTION</button>
+        <div class="terminal" id="api-log" style="min-height:80px;max-height:100px"></div>
+      </div>
+
+      <!-- Services -->
+      <div class="panel">
+        <div class="panel-title">◈ Services</div>
+        <div class="service-row">
+          <div><div class="svc-name">Next.js Server</div><div class="svc-port">:3000</div></div>
+          <div class="svc-badge" id="svc-next">—</div>
+        </div>
+        <div class="service-row">
+          <div><div class="svc-name">Python AI</div><div class="svc-port">:8000</div></div>
+          <div class="svc-badge" id="svc-py">—</div>
+        </div>
+        <div class="service-row">
+          <div><div class="svc-name">MongoDB</div><div class="svc-port">:27017</div></div>
+          <div class="svc-badge" id="svc-mongo">—</div>
+        </div>
+        <div class="service-row">
+          <div><div class="svc-name">Gitea</div><div class="svc-port">:3030</div></div>
+          <div class="svc-badge" id="svc-gitea">—</div>
+        </div>
+        <div class="service-row">
+          <div><div class="svc-name">Cloudflare Tunnel</div><div class="svc-port">CF</div></div>
+          <div class="svc-badge" id="svc-cf">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal Log -->
+    <div class="panel">
+      <div class="panel-title">◈ Live Terminal</div>
+      <div class="terminal" id="terminal">
+        <span class="line dim">King Cloud Admin Console v1.0</span>
+        <span class="line dim">Type at your API endpoint above and press TEST CONNECTION</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const HASH_KEY = 'kc_admin_hash';
+const API_KEY  = 'kc_api_url';
+let reqCount = 0;
+
+/* ── HASH ── */
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function previewHash(val, id) {
+  if (!val) { document.getElementById(id).textContent=''; return; }
+  const h = await sha256(val);
+  document.getElementById(id).textContent = 'SHA-256: ' + h.substring(0,32) + '...';
+}
+
+/* ── SETUP ── */
+async function doSetup() {
+  const pw  = document.getElementById('setup-pw').value;
+  const pw2 = document.getElementById('setup-pw2').value;
+  const msg = document.getElementById('setup-msg');
+  if (!pw) { msg.textContent='Password cannot be empty.'; return; }
+  if (pw !== pw2) { msg.textContent='Passwords do not match.'; return; }
+  if (pw.length < 6) { msg.textContent='Minimum 6 characters required.'; return; }
+  const hash = await sha256(pw);
+  localStorage.setItem(HASH_KEY, hash);
+  msg.className='msg ok'; msg.textContent='Password set. Loading dashboard...';
+  setTimeout(() => showPage('dash'), 900);
+}
+
+/* ── LOGIN ── */
+async function doLogin() {
+  const pw  = document.getElementById('login-pw').value;
+  const msg = document.getElementById('login-msg');
+  if (!pw) return;
+  const hash   = await sha256(pw);
+  const stored = localStorage.getItem(HASH_KEY);
+  if (hash === stored) {
+    msg.textContent='';
+    document.getElementById('login-pw').value='';
+    showPage('dash');
+    initDash();
+  } else {
+    msg.textContent='Access denied. Wrong password.';
+    document.getElementById('login-pw').classList.add('glitch');
+    setTimeout(()=>document.getElementById('login-pw').classList.remove('glitch'),300);
+  }
+}
+
+function resetAdmin() {
+  if(!confirm('Clear stored password hash? You will set a new password.')) return;
+  localStorage.removeItem(HASH_KEY);
+  showPage('pg-setup');
+}
+
+function doLogout() {
+  showPage('pg-login');
+}
+
+/* ── PAGES ── */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ── INIT ── */
+window.onload = () => {
+  const stored = localStorage.getItem(HASH_KEY);
+  const savedApi = localStorage.getItem(API_KEY);
+  if (savedApi) document.getElementById('api-url').value = savedApi;
+  if (!stored) showPage('pg-setup');
+  else showPage('pg-login');
+};
+
+/* ── DASHBOARD ── */
+function initDash() {
+  fetchAll();
+  setInterval(fetchAll, 30000);
+}
+
+function saveApi() {
+  const url = document.getElementById('api-url').value.trim().replace(/\/$/,'');
+  if (!url) return;
+  localStorage.setItem(API_KEY, url);
+  logLine('api-log', 'info', `Saved: ${url}`);
+}
+
+async function testApi() {
+  const url = document.getElementById('api-url').value.trim().replace(/\/$/,'');
+  if (!url) { logLine('api-log','err','No URL set.'); return; }
+  localStorage.setItem(API_KEY, url);
+  logLine('api-log','prompt','POST ' + url + '/api/metrics');
+  const t0 = Date.now();
+  try {
+    const res = await fetch(url + '/api/metrics', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ping_ms:0, latency_ms:0, network_band:'TEST'})
+    });
+    const lat = Date.now() - t0;
+    if (res.ok) {
+      const data = await res.json();
+      logLine('api-log','ok',`HTTP ${res.status} · ${lat}ms · ${JSON.stringify(data).substring(0,60)}`);
+      updateStatus(true, lat);
+    } else {
+      logLine('api-log','err',`HTTP ${res.status}`);
+      updateStatus(true, lat, res.status);
+    }
+  } catch(e) {
+    logLine('api-log','err','Connection failed: ' + e.message.substring(0,50));
+    updateStatus(false);
+  }
+}
+
+async function fetchAll() {
+  const url = (localStorage.getItem(API_KEY)||'').trim().replace(/\/$/,'');
+  reqCount++;
+  document.getElementById('s-req').textContent = reqCount;
+  document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+
+  if (!url) {
+    log('info','Set your API URL above to connect to Termux server.');
+    updateStatus(false);
+    return;
+  }
+
+  const t0 = Date.now();
+  log('prompt','kingcloud@server:~$ fetch --metrics --status');
+  try {
+    const res = await fetch(url + '/api/metrics', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ping_ms:15, latency_ms:25, network_band:'5G'})
+    });
+    const lat = Date.now() - t0;
+    if (res.ok) {
+      const data = await res.json();
+      log('ok',`✔ Connected · ${lat}ms`);
+      updateStatus(true, lat);
+      populateStats(data, lat);
+      setServiceStatus('svc-next',  'UP');
+      setServiceStatus('svc-cf',    'UP');
+      if (data.mongo)  setServiceStatus('svc-mongo', 'UP');
+      if (data.python) setServiceStatus('svc-py',    'UP');
+      if (data.gitea)  setServiceStatus('svc-gitea', 'UP');
+    } else {
+      log('err',`HTTP ${res.status} — server reachable but responded with error`);
+      updateStatus(true, lat, res.status);
+      setServiceStatus('svc-next','UP');
+      setServiceStatus('svc-cf','UP');
+    }
+  } catch(e) {
+    log('err','Connection failed — is your tunnel running?');
+    log('dim','Run: cloudflared tunnel run  (in Termux)');
+    updateStatus(false);
+    ['svc-next','svc-py','svc-mongo','svc-gitea','svc-cf'].forEach(id=>setServiceStatus(id,'DOWN'));
+  }
+}
+
+function populateStats(data, lat) {
+  if (data.ping_ms !== undefined) {
+    document.getElementById('s-ping').innerHTML = data.ping_ms + '<span class="stat-unit">ms</span>';
+    document.getElementById('s-ping-sub').textContent = 'From server';
+  }
+  document.getElementById('s-lat').innerHTML = lat + '<span class="stat-unit">ms</span>';
+  document.getElementById('s-lat-sub').textContent = 'API round-trip';
+  if (data.network_band) {
+    document.getElementById('s-net').textContent = data.network_band;
+    document.getElementById('s-net-sub').textContent = 'Active band';
+  }
+}
+
+function updateStatus(online, lat, code) {
+  const dot  = document.getElementById('status-dot');
+  const txt  = document.getElementById('status-text');
+  if (online) {
+    dot.className = 'status-dot';
+    txt.textContent = lat ? `ONLINE · ${lat}ms` : 'ONLINE';
+  } else {
+    dot.className = 'status-dot offline';
+    txt.textContent = 'OFFLINE';
+  }
+}
+
+function setServiceStatus(id, state) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = state;
+  el.className = 'svc-badge ' + (state==='UP'?'up': state==='DOWN'?'down':'ping');
+}
+
+/* ── TERMINAL LOGGER ── */
+function log(cls, text) { logLine('terminal', cls, text); }
+function logLine(termId, cls, text) {
+  const t = document.getElementById(termId);
+  const span = document.createElement('span');
+  span.className = 'line ' + cls;
+  const prefix = cls==='prompt'?'$ ': cls==='ok'?'✔ ': cls==='err'?'✗ ': '  ';
+  span.textContent = prefix + text;
+  t.appendChild(span);
+  if (t.children.length > 40) t.removeChild(t.firstChild);
+  t.scrollTop = t.scrollHeight;
+}
+</script>
+</body>
+</html>
