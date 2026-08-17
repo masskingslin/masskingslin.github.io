@@ -1,248 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <meta http-equiv="refresh" content="0; url=https://864c3f82-82b6-4bee-9d52-59f943a01183.cfargotunnel.com">
-    <script>window.location.href = "https://864c3f82-82b6-4bee-9d52-59f943a01183.cfargotunnel.com";</script>
-    <title>King | App Developer Portfolio</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --surface-color: #1e293b;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent-color: #3b82f6;
-            --accent-hover: #2563eb;
-        }
+import os
+from PIL import Image
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
+# Android mipmap folder sizes in pixels
+sizes = {
+    "mipmap-mdpi": 48,
+    "mipmap-hdpi": 72,
+    "mipmap-xhdpi": 96,
+    "mipmap-xxhdpi": 144,
+    "mipmap-xxxhdpi": 192
+}
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            line-height: 1.6;
-        }
+# The required filenames for each folder
+filenames = [
+    "ic_launcher.png",
+    "ic_launcher_foreground.png",
+    "ic_launcher_round.png"
+]
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
+def generate_android_icons(source_image_path):
+    try:
+        # Open the master image
+        img = Image.open(source_image_path)
+        
+        for folder, size in sizes.items():
+            # Create the mipmap directory if it doesn't exist
+            os.makedirs(folder, exist_ok=True)
+            
+            # Resize the image (using LANCZOS for high-quality downsampling)
+            resized_img = img.resize((size, size), Image.Resampling.LANCZOS)
+            
+            # Save the three required files in the folder
+            for filename in filenames:
+                save_path = os.path.join(folder, filename)
+                resized_img.save(save_path, "PNG")
+                print(f"Generated: {save_path}")
+                
+        print("\nSuccess! All 15 assets have been generated.")
+        
+    except FileNotFoundError:
+        print(f"Error: Could not find '{source_image_path}'. Please ensure it is in the same directory as this script.")
 
-        /* Header / Hero Section */
-        header {
-            padding: 6rem 0 4rem 0;
-            border-bottom: 1px solid var(--surface-color);
-        }
-
-        h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            color: var(--text-primary);
-        }
-
-        .subtitle {
-            font-size: 1.5rem;
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-        }
-
-        .accent-text {
-            color: var(--accent-color);
-        }
-
-        /* Sections */
-        section {
-            padding: 4rem 0;
-            border-bottom: 1px solid var(--surface-color);
-        }
-
-        section h2 {
-            font-size: 2rem;
-            margin-bottom: 2rem;
-            color: var(--text-primary);
-        }
-
-        p {
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-            font-size: 1.1rem;
-        }
-
-        /* Skills Tags */
-        .skills-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .skill-tag {
-            background-color: var(--surface-color);
-            color: var(--accent-color);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 0.9rem;
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-
-        /* Project Cards */
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .project-card {
-            background-color: var(--surface-color);
-            padding: 2rem;
-            border-radius: 12px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .project-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            border-color: rgba(59, 130, 246, 0.3);
-        }
-
-        .project-card h3 {
-            font-size: 1.4rem;
-            margin-bottom: 1rem;
-        }
-
-        .project-card p {
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .project-links a {
-            display: inline-block;
-            text-decoration: none;
-            color: white;
-            background-color: var(--accent-color);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            transition: background-color 0.2s ease;
-        }
-
-        .project-links a:hover {
-            background-color: var(--accent-hover);
-        }
-
-        /* Footer */
-        footer {
-            padding: 3rem 0;
-            text-align: center;
-            color: var(--text-secondary);
-        }
-
-        footer a {
-            color: var(--accent-color);
-            text-decoration: none;
-            margin: 0 1rem;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            .subtitle { font-size: 1.2rem; }
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <div class="container">
-            <h1>Hi, I'm <span class="accent-text">King</span>.</h1>
-            <p class="subtitle">App Developer building production-ready applications.</p>
-            <div class="skills-container">
-                <span class="skill-tag">GitHub: masskingslin</span>
-                <span class="skill-tag">Location: Chennai, India</span>
-            </div>
-        </div>
-    </header>
-
-    <main>
-        <section id="about" class="container">
-            <h2>About Me</h2>
-            <p>I am a software developer focusing on advanced Android applications, system-level metrics, and integrating AI for real-world problem solving. I am passionate about writing precise, error-free, and production-grade code solutions.</p>
-            <p>From exploring modern UI approaches like Jetpack Compose to managing personal cloud servers and Docker environments, I build robust systems from the ground up.</p>
-        </section>
-
-        <section id="skills" class="container">
-            <h2>Technical Arsenal</h2>
-            <div class="skills-container">
-                <span class="skill-tag">Android Development</span>
-                <span class="skill-tag">Jetpack Compose</span>
-                <span class="skill-tag">Python</span>
-                <span class="skill-tag">AI Integration</span>
-                <span class="skill-tag">Docker / Alpine Linux</span>
-                <span class="skill-tag">Termux Server Admin</span>
-                <span class="skill-tag">Network Diagnostics</span>
-                <span class="skill-tag">Git / GitHub</span>
-            </div>
-        </section>
-
-        <section id="projects" class="container">
-            <h2>Featured Projects</h2>
-            <div class="projects-grid">
-
-                <div class="project-card">
-                    <h3>KingWatch Pro</h3>
-                    <p>An advanced diagnostic application focused on deep network monitoring and system-level Android metrics. Engineered to handle complex threads and network detection seamlessly.</p>
-                    <div class="skills-container" style="margin-bottom: 1.5rem;">
-                        <span class="skill-tag" style="font-size: 0.8rem; padding: 0.2rem 0.6rem;">Android</span>
-                        <span class="skill-tag" style="font-size: 0.8rem; padding: 0.2rem 0.6rem;">Python</span>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Crown Bible App</h3>
-                    <p>A multi-language application featuring precise text rendering and modern UI architectures. Actively developed and maintained with a focus on fixing Android compatibility and runtime issues.</p>
-                    <div class="skills-container" style="margin-bottom: 1.5rem;">
-                        <span class="skill-tag" style="font-size: 0.8rem; padding: 0.2rem 0.6rem;">Jetpack Compose</span>
-                        <span class="skill-tag" style="font-size: 0.8rem; padding: 0.2rem 0.6rem;">AndroidIDE</span>
-                    </div>
-                    <div class="project-links">
-                        <a href="https://github.com/masskingslin/Bible-verses-app" target="_blank" rel="noopener noreferrer">View Repository</a>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <h3>Stock Market Analytics App</h3>
-                    <p>An application currently in development that attempts to integrate Indian stock market analytics with AI to process data and generate actionable predictions.</p>
-                    <div class="skills-container" style="margin-bottom: 1.5rem;">
-                        <span class="skill-tag" style="font-size: 0.8rem; padding: 0.2rem 0.6rem;">AI/ML</span>
-                        <span class="skill-tag" style="font-size: 0.8rem; padding: 0.2rem 0.6rem;">Data Analytics</span>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>Connect with me:</p>
-            <div style="margin-top: 1rem;">
-                <a href="https://github.com/masskingslin" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
-            <p style="margin-top: 2rem; font-size: 0.9rem;">&copy; 2026 King. All rights reserved.</p>
-        </div>
-    </footer>
-
-</body>
-</html>
+if __name__ == "__main__":
+    # Target the specific file you uploaded
+    generate_android_icons("1000170338.png")
